@@ -1,0 +1,22 @@
+apiVersion: v2
+name: spring-petclinic
+description: A Helm chart for Spring PetClinic application with PostgreSQL database
+type: application
+version: 0.1.0
+appVersion: "3.5.0"
+keywords:
+  - spring-boot
+  - petclinic
+  - java
+  - postgresql
+home: https://github.com/spring-projects/spring-petclinic
+sources:
+  - https://github.com/spring-projects/spring-petclinic
+maintainers:
+  - name: DevSecOps Team
+    email: devsecops@example.com
+dependencies:
+  - name: postgresql
+    version: "15.5.28"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled 

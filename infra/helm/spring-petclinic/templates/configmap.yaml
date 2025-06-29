@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "spring-petclinic.fullname" . }}-config
+  labels:
+    {{- include "spring-petclinic.labels" . | nindent 4 }}
+data:
+  application.properties: |
+    # Spring Boot Configuration
+    spring.profiles.active={{ .Values.springboot.profiles.active }}
+    
+    # Database Configuration
+    spring.datasource.driver-class-name=org.postgresql.Driver
+    spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+    spring.jpa.hibernate.ddl-auto=none
+    spring.jpa.open-in-view=false
+    
+    # Liquibase/Flyway Configuration
+    spring.sql.init.schema-locations=classpath*:db/postgres/schema.sql
+    spring.sql.init.data-locations=classpath*:db/postgres/data.sql
+    
+    # Actuator Configuration
+    management.endpoints.web.exposure.include=health,info,metrics,prometheus
+    management.endpoint.health.probes.add-additional-paths=true
+    management.endpoint.health.show-details=when-authorized
+    
+    # Logging Configuration
+    logging.level.org.springframework=INFO
+    logging.level.org.springframework.web=DEBUG
+    
+    # Security Configuration
+    spring.security.require-ssl=false
+    
+    # Web Configuration
+    spring.thymeleaf.mode=HTML
+    spring.web.resources.cache.cachecontrol.max-age=12h
+    
+    # Internationalization
+    spring.messages.basename=messages/messages 

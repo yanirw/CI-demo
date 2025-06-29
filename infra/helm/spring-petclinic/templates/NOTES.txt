@@ -1,0 +1,88 @@
+🐕 Spring PetClinic has been deployed successfully!
+
+📋 Deployment Summary:
+- Release Name: {{ .Release.Name }}
+- Namespace: {{ .Release.Namespace }}
+- Chart Version: {{ .Chart.Version }}
+- App Version: {{ .Chart.AppVersion }}
+
+🔧 Configuration:
+- Replicas: {{ .Values.replicaCount }}
+- Database: PostgreSQL ({{ if .Values.postgresql.enabled }}included{{ else }}external{{ end }})
+- Profile: {{ .Values.springboot.profiles.active }}
+
+🌐 Access Information:
+{{- if .Values.ingress.enabled }}
+Your application will be available at:
+{{- range $host := .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}{{ (index $host.paths 0).path }}
+{{- end }}
+{{- else if contains "NodePort" .Values.service.type }}
+Get the application URL by running:
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "spring-petclinic.fullname" . }})
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if contains "LoadBalancer" .Values.service.type }}
+Get the application URL by running:
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "spring-petclinic.fullname" . }}'
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "spring-petclinic.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo http://$SERVICE_IP:{{ .Values.service.port }}
+{{- else if contains "ClusterIP" .Values.service.type }}
+Access the application by port-forwarding:
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "spring-petclinic.fullname" . }} 8080:{{ .Values.service.port }}
+  
+Then visit: http://127.0.0.1:8080
+{{- end }}
+
+🔍 Health Checks:
+- Liveness:  http://localhost:8080/actuator/health/liveness
+- Readiness: http://localhost:8080/actuator/health/readiness
+- Metrics:   http://localhost:8080/actuator/metrics
+
+📊 Monitoring:
+{{- if .Values.monitoring.enabled }}
+- Prometheus metrics: http://localhost:8080/actuator/prometheus
+{{- if .Values.monitoring.serviceMonitor.enabled }}
+- ServiceMonitor created for Prometheus Operator
+{{- end }}
+{{- else }}
+- Monitoring is disabled
+{{- end }}
+
+🔒 Security Features:
+- Non-root container execution
+- Read-only root filesystem
+- Security contexts applied
+- Network policies: {{ if .Values.networkPolicy.enabled }}enabled{{ else }}disabled{{ end }}
+- Service account: {{ include "spring-petclinic.serviceAccountName" . }}
+
+🗄️ Database:
+{{- if .Values.postgresql.enabled }}
+PostgreSQL is deployed as part of this release:
+- Database: {{ .Values.postgresql.auth.database }}
+- Username: {{ .Values.postgresql.auth.username }}
+- Connection: {{ include "spring-petclinic.postgresql.fullname" . }}:5432
+{{- else }}
+External PostgreSQL configuration:
+- Host: {{ .Values.database.host }}
+- Port: {{ .Values.database.port }}
+- Database: {{ .Values.database.name }}
+{{- end }}
+
+🚀 Useful Commands:
+  # View application logs
+  kubectl logs -f deployment/{{ include "spring-petclinic.fullname" . }} -n {{ .Release.Namespace }}
+  
+  # Scale the application
+  kubectl scale deployment {{ include "spring-petclinic.fullname" . }} --replicas=3 -n {{ .Release.Namespace }}
+  
+  # Check pod status
+  kubectl get pods -l app.kubernetes.io/name={{ include "spring-petclinic.name" . }} -n {{ .Release.Namespace }}
+  
+  # Access PostgreSQL (if enabled)
+  {{- if .Values.postgresql.enabled }}
+  kubectl run {{ include "spring-petclinic.fullname" . }}-postgresql-client --rm --tty -i --restart='Never' --namespace {{ .Release.Namespace }} --image docker.io/bitnami/postgresql:15 --env="PGPASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "spring-petclinic.postgresql.fullname" . }} -o jsonpath="{.data.postgres-password}" | base64 -d)" --command -- psql --host {{ include "spring-petclinic.postgresql.fullname" . }} -U {{ .Values.postgresql.auth.username }} -d {{ .Values.postgresql.auth.database }} -p 5432
+  {{- end }}
+
+✅ Deployment completed! Enjoy your PetClinic application! 
