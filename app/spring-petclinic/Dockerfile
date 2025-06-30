@@ -19,11 +19,6 @@ RUN --mount=type=cache,target=/root/.m2 \
 
 FROM gcr.io/distroless/java17-debian12:nonroot
 
-LABEL org.opencontainers.image.title="Spring PetClinic"
-LABEL org.opencontainers.image.description="Sample Spring Boot application"
-LABEL org.opencontainers.image.version="3.5.0-SNAPSHOT"
-LABEL org.opencontainers.image.source="https://github.com/spring-projects/spring-petclinic"
-
 USER nonroot:nonroot
 
 WORKDIR /app
