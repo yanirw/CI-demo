@@ -15,7 +15,6 @@ permissions:
 env:
   JF_URL: ${{ secrets.JF_URL }}
   JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
-  REGISTRY_URL: ${{ secrets.JF_URL }}/artifactory/petclinic-docker
   IMAGE_NAME: spring-petclinic
 
 jobs:
@@ -43,6 +42,9 @@ jobs:
 
     - name: Setup JFrog CLI
       uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: ${{ env.JF_URL }}
+        JF_ACCESS_TOKEN: ${{ env.JF_ACCESS_TOKEN }}
 
     - name: Configure JFrog CLI for Maven
       run: |
@@ -89,40 +91,38 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+    - name: Setup JFrog CLI
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: ${{ env.JF_URL }}
+        JF_ACCESS_TOKEN: ${{ env.JF_ACCESS_TOKEN }}
 
-    - name: Log in to JFrog Docker Registry
-      run: |
-        echo ${{ secrets.JF_ACCESS_TOKEN }} | docker login ${{ env.REGISTRY_URL }} -u admin --password-stdin
-
-    - name: Build Docker image
+    - name: Build and push Docker Image
       working-directory: app/spring-petclinic
+      env:
+        IMAGE_TAG: yanirlab.jfrog.io/petclinic-docker/${{ env.IMAGE_NAME }}:${{ needs.jfrog-build-scan.outputs.image-tag }}
+        IMAGE_LATEST: yanirlab.jfrog.io/petclinic-docker/${{ env.IMAGE_NAME }}:latest
       run: |
-        IMAGE_TAG="${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ needs.jfrog-build-scan.outputs.image-tag }}"
-        docker build -t $IMAGE_TAG .
-        docker tag $IMAGE_TAG ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest
-        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+        jf docker build -t $IMAGE_TAG .
+        jf docker push $IMAGE_TAG
+        docker tag $IMAGE_TAG $IMAGE_LATEST
+        jf docker push $IMAGE_LATEST
 
     - name: Install Cosign
       uses: sigstore/cosign-installer@v3
 
     - name: Sign Docker image (Keyless)
       run: |
-        # Keyless signing using GitHub OIDC
-        cosign sign --yes $IMAGE_TAG
-
-    - name: Setup JFrog CLI
-      uses: jfrog/setup-jfrog-cli@v4
-
-    - name: Push to JFrog Artifactory
-      run: |
-        jf docker push $IMAGE_TAG --build-name=petclinic-build --build-number=${{ needs.jfrog-build-scan.outputs.image-tag }}
-        jf docker push ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest --build-name=petclinic-build --build-number=${{ needs.jfrog-build-scan.outputs.image-tag }}
+        cosign sign --yes yanirlab.jfrog.io/petclinic-docker/${{ env.IMAGE_NAME }}:${{ needs.jfrog-build-scan.outputs.image-tag }}
 
     - name: Publish Build Info to JFrog
+      env:
+        JFROG_CLI_BUILD_NAME: petclinic-build
+        JFROG_CLI_BUILD_NUMBER: ${{ needs.jfrog-build-scan.outputs.image-tag }}
       run: |
-        jf rt build-publish petclinic-build ${{ needs.jfrog-build-scan.outputs.image-tag }}
+        jf rt build-collect-env
+        jf rt build-add-git
+        jf rt build-publish
 
     - name: Comment container build results on PR
       if: github.event_name == 'pull_request'
@@ -133,7 +133,7 @@ jobs:
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: '**Container Build Completed**\n\nDocker image built with security hardening, signed with Cosign, and published to JFrog Artifactory.\n\nImage tag: `${{ needs.jfrog-build-scan.outputs.image-tag }}`'
+            body: 'Container build completed with Docker layer caching enabled. Image tag: `${{ needs.jfrog-build-scan.outputs.image-tag }}`'
           })
 
   # Job 3: Final XRay Policy Enforcement & SBOM
@@ -143,15 +143,19 @@ jobs:
     steps:
     - name: Setup JFrog CLI
       uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: ${{ env.JF_URL }}
+        JF_ACCESS_TOKEN: ${{ env.JF_ACCESS_TOKEN }}
 
     - name: XRay Build Scan and Policy Enforcement
+      env:
+        JFROG_CLI_BUILD_NAME: petclinic-build
+        JFROG_CLI_BUILD_NUMBER: ${{ needs.jfrog-build-scan.outputs.image-tag }}
       run: |
         echo "Running final XRay build scan and policy enforcement..."
-        # Build scan with policy enforcement
-        jf build-scan petclinic-build ${{ needs.jfrog-build-scan.outputs.image-tag }} --format=json --output-file=xray-build-scan.json
+        jf build-scan $JFROG_CLI_BUILD_NAME $JFROG_CLI_BUILD_NUMBER --format=json --output-file=xray-build-scan.json
         
-        # Generate Software Bill of Materials
-        jf build-scan petclinic-build ${{ needs.jfrog-build-scan.outputs.image-tag }} --format=sarif --output-file=sbom.sarif
+        jf build-scan $JFROG_CLI_BUILD_NAME $JFROG_CLI_BUILD_NUMBER --format=sarif --output-file=sbom.sarif
         
         echo "XRay scanning and SBOM generation completed"
 
