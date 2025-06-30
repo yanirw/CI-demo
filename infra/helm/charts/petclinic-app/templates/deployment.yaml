@@ -1,29 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "spring-petclinic.fullname" . }}
+  name: {{ include "petclinic-app.fullname" . }}
   labels:
-    {{- include "spring-petclinic.labels" . | nindent 4 }}
+    {{- include "petclinic-app.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "spring-petclinic.selectorLabels" . | nindent 6 }}
+      {{- include "petclinic-app.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
       labels:
-        {{- include "spring-petclinic.selectorLabels" . | nindent 8 }}
+        {{- include "petclinic-app.selectorLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "spring-petclinic.serviceAccountName" . }}
+      serviceAccountName: {{ include "petclinic-app.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -42,17 +41,17 @@ spec:
             - name: JAVA_OPTS
               value: {{ .Values.springboot.jvm.opts }}
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://{{ include "spring-petclinic.postgresql.fullname" . }}:{{ .Values.database.port }}/{{ .Values.database.name }}"
+              value: {{ include "petclinic-app.databaseUrl" . }}
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "spring-petclinic.fullname" . }}-db-secret
-                  key: username
+                  name: {{ .Values.database.secretName }}
+                  key: {{ .Values.database.usernameKey }}
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "spring-petclinic.fullname" . }}-db-secret
-                  key: password
+                  name: {{ .Values.database.secretName }}
+                  key: {{ .Values.database.passwordKey }}
             - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
               value: "health,info,metrics,prometheus"
           volumeMounts:
@@ -72,7 +71,7 @@ spec:
           emptyDir: {}
         - name: config-volume
           configMap:
-            name: {{ include "spring-petclinic.fullname" . }}-config
+            name: {{ include "petclinic-app.fullname" . }}-config
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

@@ -1,16 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "spring-petclinic.name" -}}
+{{- define "petclinic-app.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-If release name contains chart name it will be used as a full name.
 */}}
-{{- define "spring-petclinic.fullname" -}}
+{{- define "petclinic-app.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +24,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "spring-petclinic.chart" -}}
+{{- define "petclinic-app.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "spring-petclinic.labels" -}}
-helm.sh/chart: {{ include "spring-petclinic.chart" . }}
-{{ include "spring-petclinic.selectorLabels" . }}
+{{- define "petclinic-app.labels" -}}
+helm.sh/chart: {{ include "petclinic-app.chart" . }}
+{{ include "petclinic-app.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,26 +43,29 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "spring-petclinic.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "spring-petclinic.name" . }}
+{{- define "petclinic-app.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "petclinic-app.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "spring-petclinic.serviceAccountName" -}}
+{{- define "petclinic-app.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "spring-petclinic.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "petclinic-app.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
 
 {{/*
-Create a default fully qualified postgresql name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+Database connection URL
 */}}
-{{- define "spring-petclinic.postgresql.fullname" -}}
-{{- printf "%s-%s" .Release.Name "postgresql" | trunc 63 | trimSuffix "-" }}
+{{- define "petclinic-app.databaseUrl" -}}
+{{- if .Values.database.external.enabled }}
+{{- printf "jdbc:postgresql://%s:%d/%s" .Values.database.external.host (.Values.database.external.port | int) .Values.database.external.database }}
+{{- else }}
+{{- printf "jdbc:postgresql://%s-postgresql:%d/%s" .Release.Name (.Values.database.port | int) .Values.database.name }}
+{{- end }}
 {{- end }} 

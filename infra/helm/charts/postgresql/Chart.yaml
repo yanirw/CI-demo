@@ -1,0 +1,16 @@
+apiVersion: v2
+name: postgresql
+description: PostgreSQL database Helm chart for PetClinic
+type: application
+version: 0.1.0
+appVersion: "16"
+keywords:
+  - postgresql
+  - database
+  - sql
+home: https://www.postgresql.org/
+sources:
+  - https://github.com/postgres/postgres
+maintainers:
+  - name: DevSecOps Team
+    email: devsecops@example.com 

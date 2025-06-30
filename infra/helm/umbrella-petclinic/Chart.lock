@@ -1,0 +1,9 @@
+dependencies:
+- name: postgresql
+  repository: file://../charts/postgresql
+  version: 0.1.0
+- name: petclinic-app
+  repository: file://../charts/petclinic-app
+  version: 0.1.0
+digest: sha256:89c0eee3766c7f1d638a1ccb974e7979f713c66f55eb163410bc01e0bf682ad5
+generated: "2025-06-30T15:51:47.5957924+03:00"

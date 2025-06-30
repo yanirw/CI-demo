@@ -1,28 +1,24 @@
-# Default values for spring-petclinic
-# This is a YAML-formatted file
+# Default values for petclinic-app
 
 # Application configuration
 app:
-  name: spring-petclinic
+  name: petclinic-app
   version: "3.5.0"
   
 # Image configuration
 image:
-  repository: "" # Will be set by CI/CD pipeline
-  tag: "" # Will be set by CI/CD pipeline
+  repository: "yanirlab.jfrog.io/petclinic-docker/spring-petclinic" 
+  tag: "417f8e52"
   pullPolicy: IfNotPresent
-  registry: ""
-  registryUsername: ""
-  registryPassword: ""
 
-# Image pull secrets for private registries
-imagePullSecrets:
-  - name: jfrog-registry-secret
+# Image pull secrets (disabled for public image)
+# imagePullSecrets:
+#   - name: jfrog-registry-secret
 
 # Service account
 serviceAccount:
   create: true
-  name: spring-petclinic-sa
+  name: ""
   annotations: {}
 
 # Pod security context
@@ -114,58 +110,28 @@ springboot:
 
 # Database configuration
 database:
-  # Connection details (will be injected from secrets)
-  host: ""
+  # Connection parameters
   port: 5432
   name: petclinic
-  username: ""
-  password: ""
-
-# PostgreSQL subchart configuration
-postgresql:
-  enabled: true
-  auth:
-    postgresPassword: "" # Will be set from GitHub secrets
-    username: petclinic
-    password: "" # Will be set from GitHub secrets
+  # Secret configuration (managed by External Secrets Operator)
+  secretName: petclinic-db-secret
+  usernameKey: username
+  passwordKey: password
+  # External database configuration (for managed databases)
+  external:
+    enabled: false
+    host: ""
+    port: 5432
     database: petclinic
-  primary:
-    persistence:
-      enabled: true
-      size: 8Gi
-    resources:
-      limits:
-        memory: 256Mi
-        cpu: 250m
-      requests:
-        memory: 128Mi
-        cpu: 100m
-  metrics:
-    enabled: true
-    resources:
-      limits:
-        memory: 256Mi
-        cpu: 250m
-      requests:
-        memory: 128Mi
-        cpu: 100m
 
-# Monitoring and observability
-monitoring:
-  enabled: true
-  serviceMonitor:
-    enabled: false
-  prometheusRule:
-    enabled: false
-
-# External secrets configuration (for GitHub secrets integration)
+# External secrets configuration
 externalSecrets:
   enabled: true
   secretStore:
     name: github-secret-store
     kind: SecretStore
   refreshInterval: 1h
-  
+
 # Network policies
 networkPolicy:
   enabled: true

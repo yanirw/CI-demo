@@ -1,0 +1,17 @@
+apiVersion: v2
+name: umbrella-petclinic
+description: Umbrella chart for complete PetClinic application stack
+type: application
+version: 0.1.0
+appVersion: "3.5.0"
+
+
+dependencies:
+  - name: postgresql
+    version: "0.1.0"
+    repository: "file://../charts/postgresql"
+    condition: postgresql.enabled
+  - name: petclinic-app
+    version: "0.1.0"
+    repository: "file://../charts/petclinic-app"
+    condition: app.enabled 

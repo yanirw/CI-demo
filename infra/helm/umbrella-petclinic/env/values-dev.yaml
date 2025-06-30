@@ -1,0 +1,51 @@
+# Development environment configuration
+
+global:
+  environment: "dev"
+
+petclinic-app:
+  replicaCount: 1
+  image:
+    tag: "417f8e52"  
+  
+  database:
+    secretName: petclinic-dev-db-secret
+    
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  ingress:
+    enabled: true
+    hosts:
+      - host: dev.petclinic.local
+        paths:
+          - path: /
+            pathType: Prefix
+
+  autoscaling:
+    enabled: false
+
+postgresql:
+  auth:
+    secretName: petclinic-dev-db-secret
+    
+  primary:
+    persistence:
+      size: 2Gi
+    resources:
+      limits:
+        memory: 128Mi
+        cpu: 100m
+      requests:
+        memory: 64Mi
+        cpu: 50m
+
+externalSecrets:
+  secretStore:
+    name: dev-secret-store
+    kind: SecretStore 

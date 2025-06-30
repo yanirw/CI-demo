@@ -1,0 +1,17 @@
+apiVersion: v2
+name: petclinic-app
+description: Spring PetClinic application Helm chart
+type: application
+version: 0.1.0
+appVersion: "3.5.0"
+keywords:
+  - spring-boot
+  - petclinic
+  - java
+  - application
+home: https://github.com/spring-projects/spring-petclinic
+sources:
+  - https://github.com/spring-projects/spring-petclinic
+maintainers:
+  - name: DevSecOps Team
+    email: devsecops@example.com 

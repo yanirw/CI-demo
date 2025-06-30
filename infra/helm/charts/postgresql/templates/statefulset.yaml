@@ -1,0 +1,91 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "postgresql.fullname" . }}
+  labels:
+    {{- include "postgresql.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  serviceName: {{ include "postgresql.fullname" . }}
+  selector:
+    matchLabels:
+      {{- include "postgresql.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "postgresql.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+      containers:
+        - name: postgresql
+          image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgresql
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.auth.database }}
+            - name: POSTGRES_USER
+              value: {{ .Values.auth.username }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.secretName }}
+                  key: {{ .Values.auth.postgresPasswordKey }}
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: postgresql-data
+              mountPath: /var/lib/postgresql/data
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U "{{ .Values.auth.username }}" -d "{{ .Values.auth.database }}" -h 127.0.0.1 -p 5432
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - -e
+                - |
+                  exec pg_isready -U "{{ .Values.auth.username }}" -d "{{ .Values.auth.database }}" -h 127.0.0.1 -p 5432
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.primary.resources | nindent 12 }}
+      volumes:
+        - name: init-scripts
+          configMap:
+            name: {{ include "postgresql.fullname" . }}-init
+  {{- if .Values.primary.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: postgresql-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.primary.persistence.size }}
+  {{- else }}
+        - name: postgresql-data
+          emptyDir: {}
+  {{- end }}
+{{- end }} 

@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "petclinic-app.fullname" . }}-config
+  labels:
+    {{- include "petclinic-app.labels" . | nindent 4 }}
+data:
+  application.yaml: |
+    spring:
+      application:
+        name: petclinic
+      profiles:
+        active: {{ .Values.springboot.profiles.active }}
+      thymeleaf:
+        mode: HTML
+      jpa:
+        hibernate:
+          ddl-auto: none
+        open-in-view: false
+      messages:
+        basename: messages/messages
+      web:
+        resources:
+          cache:
+            cachecontrol:
+              max-age: 12h
+    
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info,metrics,prometheus
+      endpoint:
+        health:
+          probes:
+            add-additional-paths: true
+    
+    logging:
+      level:
+        org.springframework: INFO 

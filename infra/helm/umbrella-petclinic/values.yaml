@@ -1,0 +1,78 @@
+# Default values for umbrella-petclinic
+# This umbrella chart orchestrates the complete PetClinic application stack
+
+# Global configuration
+global:
+  # Image registry configuration
+  imageRegistry: "yanirlab.jfrog.io"
+  # Environment (dev, staging, prod)
+  environment: "dev"
+
+# Application component configuration
+app:
+  enabled: true
+  
+# PostgreSQL component configuration  
+postgresql:
+  enabled: true
+
+# External Secrets configuration
+externalSecrets:
+  enabled: true
+  secretStore:
+    name: github-secret-store
+    kind: SecretStore
+  refreshInterval: 1h
+
+# Component-specific value overrides
+petclinic-app:
+  replicaCount: 2
+  image:
+    repository: "yanirlab.jfrog.io/petclinic-docker/spring-petclinic" 
+    tag: "417f8e52"
+  
+  database:
+    secretName: petclinic-db-secret
+    
+  service:
+    type: ClusterIP
+    port: 80
+    
+  ingress:
+    enabled: false
+    hosts:
+      - host: petclinic.local
+        paths:
+          - path: /
+            pathType: Prefix
+            
+  autoscaling:
+    enabled: false
+    
+  networkPolicy:
+    enabled: true
+
+postgresql:
+  enabled: true
+  auth:
+    username: petclinic
+    database: petclinic
+    secretName: petclinic-db-secret
+    
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+    resources:
+      limits:
+        memory: 256Mi
+        cpu: 250m
+      requests:
+        memory: 128Mi
+        cpu: 100m
+        
+  metrics:
+    enabled: true
+    
+  networkPolicy:
+    enabled: true 
