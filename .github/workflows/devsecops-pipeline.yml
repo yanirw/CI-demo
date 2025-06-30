@@ -48,7 +48,7 @@ jobs:
 
     - name: Configure JFrog CLI for Maven
       run: |
-        jf mvn-config --server-id-resolve petclinic-maven --server-id-deploy petclinic-maven --repo-resolve-releases petclinic-maven --repo-resolve-snapshots petclinic-maven --repo-deploy-releases petclinic-maven-local --repo-deploy-snapshots petclinic-maven-local
+        jf mvn-config --repo-resolve-releases petclinic-maven --repo-resolve-snapshots petclinic-maven --repo-deploy-releases petclinic-maven-local --repo-deploy-snapshots petclinic-maven-local
 
     - name: Build with JFrog and XRay Dependency Scanning
       working-directory: app/spring-petclinic
