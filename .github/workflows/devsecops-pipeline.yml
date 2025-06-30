@@ -23,6 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image-tag: ${{ steps.image-tag.outputs.tag }}
+      docker-registry: ${{ steps.docker-registry.outputs.registry }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -33,6 +34,13 @@ jobs:
         TAG=${GITHUB_SHA::8}
         echo "tag=$TAG" >> $GITHUB_OUTPUT
         echo "Generated image tag: $TAG"
+
+    - name: Calculate Docker registry
+      id: docker-registry
+      run: |
+        DOCKER_REGISTRY=$(echo "${{ env.JF_URL }}" | sed 's|https://||')
+        echo "registry=$DOCKER_REGISTRY" >> $GITHUB_OUTPUT
+        echo "Docker registry: $DOCKER_REGISTRY"
 
   # Job 2: Container Build, Sign & Push
   container-build:
@@ -52,8 +60,10 @@ jobs:
       working-directory: app/spring-petclinic
       env:
         IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
-        FULL_IMAGE: ${{ env.JF_URL }}/petclinic-docker/${{ env.IMAGE_NAME }}
+        DOCKER_REGISTRY: ${{ needs.build.outputs.docker-registry }}
       run: |
+        FULL_IMAGE="$DOCKER_REGISTRY/petclinic-docker/${{ env.IMAGE_NAME }}"
+        
         jf docker build -t $FULL_IMAGE:$IMAGE_TAG .
         jf docker push $FULL_IMAGE:$IMAGE_TAG
         docker tag $FULL_IMAGE:$IMAGE_TAG $FULL_IMAGE:latest
@@ -64,7 +74,7 @@ jobs:
 
     - name: Sign Docker image (Keyless)
       run: |
-        cosign sign --yes ${{ env.JF_URL }}/petclinic-docker/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }}
+        cosign sign --yes ${{ needs.build.outputs.docker-registry }}/petclinic-docker/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }}
 
     - name: Publish Build Info to JFrog
       env:
@@ -80,11 +90,13 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
+          const imageRef = '${{ needs.build.outputs.docker-registry }}/petclinic-docker/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }}';
+          
           github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: 'Docker image built and published successfully.\n\n**Image:** `${{ env.JF_URL }}/petclinic-docker/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }}`'
+            body: `Docker image built and published successfully.\n\n**Image:** \`${imageRef}\``
           })
 
   # Job 3: XRay Docker Image Scanning
@@ -101,10 +113,12 @@ jobs:
     - name: XRay Docker Image Scan
       env:
         IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
-        FULL_IMAGE: ${{ env.JF_URL }}/petclinic-docker/${{ env.IMAGE_NAME }}
+        DOCKER_REGISTRY: ${{ needs.build.outputs.docker-registry }}
         JFROG_CLI_BUILD_NAME: petclinic-build
         JFROG_CLI_BUILD_NUMBER: ${{ needs.build.outputs.image-tag }}
       run: |
+        FULL_IMAGE="$DOCKER_REGISTRY/petclinic-docker/${{ env.IMAGE_NAME }}"
+        
         echo "Scanning Docker image for vulnerabilities..."
         # Scan the specific Docker image
         jf docker scan $FULL_IMAGE:$IMAGE_TAG
