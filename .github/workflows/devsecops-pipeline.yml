@@ -11,6 +11,7 @@ permissions:
   security-events: write
   pull-requests: write
   actions: read
+  id-token: write  # Required for Cosign keyless signing
 
 env:
   JF_URL: ${{ secrets.JF_URL }}
@@ -69,12 +70,12 @@ jobs:
         docker tag $FULL_IMAGE:$IMAGE_TAG $FULL_IMAGE:latest
         jf docker push $FULL_IMAGE:latest
 
-    - name: Install Cosign
-      uses: sigstore/cosign-installer@v3
+    # - name: Install Cosign
+    #   uses: sigstore/cosign-installer@v3
 
-    - name: Sign Docker image (Keyless)
-      run: |
-        cosign sign --yes ${{ needs.build.outputs.docker-registry }}/petclinic-docker/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }}
+    # - name: Sign Docker image (Keyless)
+    #   run: |
+    #     cosign sign --yes ${{ needs.build.outputs.docker-registry }}/petclinic-docker/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }}
 
     - name: Publish Build Info to JFrog
       env:
