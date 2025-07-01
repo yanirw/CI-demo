@@ -25,17 +25,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Debug and fix gradlew permissions
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Make gradlew executable
       working-directory: app/spring-petclinic
-      run: |
-        echo "📋 Current directory contents:"
-        ls -la
-        echo "📋 Gradlew file details:"
-        ls -la ./gradlew || echo "gradlew not found!"
-        echo "📋 Making gradlew executable..."
-        chmod +x ./gradlew
-        echo "📋 After chmod:"
-        ls -la ./gradlew
+      run: chmod +x ./gradlew
 
     - name: Frogbot Security Scan
       uses: jfrog/frogbot@v2.26.3
