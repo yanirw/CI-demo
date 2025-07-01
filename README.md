@@ -4,24 +4,24 @@ A DevSecOps pipeline implementation showcasing modern security practices through
 
 ## Features
 
-**Multi-Layer Security Scanning:**
+### Multi-Layer Security Scanning
 - Pre-build dependency scan (SCA, secrets, SAST) with JFrog CLI
 - Post-build policy enforcement via JFrog XRay
 - GitHub native security (Dependabot, secret scanning, CodeQL)
 
-**Container Security:**
+### Container Security
 - Multi-stage Dockerfile with non-root user
 - Secure image builds and distribution via JFrog Artifactory
 - Vulnerability blocking on High+ severity findings
 
-## CI Pipeline Overview
-
-# Prerequisites
+## Prerequisites
 
 - JFrog Artifactory with XRay policies configured
 - GitHub secrets: `JF_URL`, `JF_ACCESS_TOKEN`
 
-**Pipeline Flow:**
+## 🚀 CI Pipeline Overview
+
+### Pipeline Flow
 
 1. **Build Preparation**
    - Generate unique image tags from Git commit SHA
@@ -54,8 +54,13 @@ A DevSecOps pipeline implementation showcasing modern security practices through
 ## 📁 Repository Structure
 
 ```
-├── .github/workflows/        # CI pipeline
-├── app/spring-petclinic/     # Source code + Dockerfile
-├── infra/helm/               # Helm chart for deployment
+CI-demo/
+├── .github/workflows/        # CI pipeline configuration
+├── app/spring-petclinic/     # Spring PetClinic application + Dockerfile
+└── infra/helm/              # Helm charts for Kubernetes deployment
+    ├── charts/
+    │   ├── petclinic-app/   # Application chart
+    │   └── postgresql/      # Database chart
+    └── umbrella-petclinic/  # Umbrella chart
 ```
 
