@@ -26,13 +26,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup JFrog CLI
-      uses: jfrog/setup-jfrog-cli@v4
-      env:
-        JF_URL: ${{ env.JF_URL }}
-        JF_ACCESS_TOKEN: ${{ env.JF_ACCESS_TOKEN }}
-
-    - name: Frogbot by JFrog
+    - name: Frogbot
       uses: jfrog/frogbot@v2.26.3
       env:
         JF_URL: ${{ env.JF_URL }}
