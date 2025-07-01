@@ -11,7 +11,6 @@ permissions:
   contents: read
   security-events: write
 
-
 env:
   JF_URL: ${{ secrets.JF_URL }}
   JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
@@ -62,7 +61,7 @@ jobs:
     - name: Scan local dependencies before build
       working-directory: app/spring-petclinic
       run: |
-        echo "Scanning local project dependencies..."
+        echo "🔍 Scanning local project dependencies..."
         jf audit --fail=true --min-severity=High
 
     - name: Build and push Docker image
@@ -72,7 +71,7 @@ jobs:
         DOCKER_REGISTRY: ${{ needs.build.outputs.docker-registry }}
       run: |
         FULL_IMAGE="$DOCKER_REGISTRY/petclinic-docker/${{ env.IMAGE_NAME }}"
-        echo "Building image: $FULL_IMAGE:$IMAGE_TAG"
+        echo "🐳 Building image: $FULL_IMAGE:$IMAGE_TAG"
         jf docker build -t $FULL_IMAGE:$IMAGE_TAG .
         jf docker push $FULL_IMAGE:$IMAGE_TAG
 
@@ -81,6 +80,7 @@ jobs:
         JFROG_CLI_BUILD_NAME: ${{ env.BUILD_NAME }}
         JFROG_CLI_BUILD_NUMBER: ${{ needs.build.outputs.image-tag }}
       run: |
+        echo "📋 Publishing build info to JFrog..."
         jf rt build-collect-env
         jf rt build-add-git
         jf rt build-publish
@@ -99,24 +99,23 @@ jobs:
 
     - name: Wait for XRay indexing
       run: |
-        echo "Waiting for XRay"
+        echo "⏳ Waiting for XRay indexing to complete..."
         sleep 30
 
-    - name: Audit build against XRay policies (fail on high vulns)
+    - name: XRay security scan
       env:
         JFROG_CLI_BUILD_NAME: ${{ env.BUILD_NAME }}
         JFROG_CLI_BUILD_NUMBER: ${{ needs.build.outputs.image-tag }}
       run: |
-        echo "Auditing build against XRay security policies..."
+        echo "🛡️ Scanning build against XRay policies..."
         jf build-scan $JFROG_CLI_BUILD_NAME $JFROG_CLI_BUILD_NUMBER
-        echo "Build passed XRay security policy audit"
 
     - name: Retrieve XRay scan results
       env:
         JFROG_CLI_BUILD_NAME: ${{ env.BUILD_NAME }}
         JFROG_CLI_BUILD_NUMBER: ${{ needs.build.outputs.image-tag }}
       run: |
-        echo "Retrieving XRay scan results..."
+        echo "📊 Retrieving XRay scan results..."
         jf build-scan $JFROG_CLI_BUILD_NAME $JFROG_CLI_BUILD_NUMBER --format=json --output-file=xray-scan-results.json || \
         echo "{\"status\":\"scanned\",\"note\":\"Check JFrog XRay dashboard for full results\"}" > xray-scan-results.json
 

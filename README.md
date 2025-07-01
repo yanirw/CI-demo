@@ -1,4 +1,4 @@
-# DevSecOps Pipeline: Spring PetClinic
+# 🛡️DevSecOps Pipeline: Spring PetClinic
 
 This repository demonstrates a secure CI pipeline, Dockerfile creation and Helm charts based on DevSecOps best practices for the [Spring PetClinic](https://github.com/spring-projects/spring-petclinic) application, built using GitHub Actions, Docker, Helm, and JFrog Artifactory/XRay.
 
