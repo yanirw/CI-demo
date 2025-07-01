@@ -1,0 +1,9 @@
+- params:
+    git:
+      repoName: CI-demo
+      branches:
+        - main
+    scan:
+      projects:
+        - workingDirs:
+            - app/spring-petclinic 

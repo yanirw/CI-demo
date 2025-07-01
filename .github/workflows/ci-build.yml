@@ -25,23 +25,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-
-    - name: Make gradlew executable
-      working-directory: app/spring-petclinic
-      run: chmod +x ./gradlew
-
+  
     - name: Frogbot Security Scan
       uses: jfrog/frogbot@v2.26.3
       env:
         JF_URL: ${{ env.JF_URL }}
         JF_ACCESS_TOKEN: ${{ env.JF_ACCESS_TOKEN }}
         JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        JF_WORKING_DIR: app/spring-petclinic
 
   build:
     if: github.event.pull_request.merged == true
