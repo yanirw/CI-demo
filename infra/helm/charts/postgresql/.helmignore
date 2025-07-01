@@ -5,6 +5,3 @@
 .idea/
 .vscode/
 
-# Local overrides
-values-local.yaml
-values-dev.yaml 
