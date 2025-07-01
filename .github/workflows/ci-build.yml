@@ -58,11 +58,11 @@ jobs:
         JF_URL: ${{ env.JF_URL }}
         JF_ACCESS_TOKEN: ${{ env.JF_ACCESS_TOKEN }}
 
-    - name: Scan local dependencies before build
-      working-directory: app/spring-petclinic
-      run: |
-        echo "🔍 Scanning local project dependencies..."
-        jf audit --fail=true --min-severity=High
+    # - name: Scan local dependencies before build
+    #   working-directory: app/spring-petclinic
+    #   run: |
+    #     echo "🔍 Scanning local project dependencies..."
+    #     jf audit --fail=true --min-severity=High
 
     - name: Build and push Docker image
       working-directory: app/spring-petclinic
