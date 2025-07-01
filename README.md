@@ -1,14 +1,13 @@
-# DevSecOps Pipeline: Spring PetClinic
+# 🛡️DevSecOps Pipeline: Spring PetClinic
 
-This repository demonstrates a secure CI/CD pipeline for the [Spring PetClinic](https://github.com/spring-projects/spring-petclinic) application, built using GitHub Actions, Docker, Helm, and JFrog Artifactory/XRay.
+This repository demonstrates a secure CI pipeline, Dockerfile creation and Helm charts based on DevSecOps best practices for the [Spring PetClinic](https://github.com/spring-projects/spring-petclinic) application, built using GitHub Actions, Docker, Helm, and JFrog Artifactory/XRay.
 
 ## Features
 
-- GitHub’s built-in SAST and secret scanning enabled  
-- CI pipeline with build, test, Docker packaging
+- GitHub’s built-in SAST, secret scanning and Dependabot applied as PR gates  
 - Secure Dockerfile with non-root user and multi-stage build
 - Image pushed to JFrog Artifactory
-- XRay scan with SBOM generation and vulnerability blocking
+- XRay scan with SBOM generation and vulnerability blocking (High vulnerability and above will fail the build and make artifacts blocked)
 - Kubernetes deployment via Helm chart
 - Branch protection enforced (PRs only, required checks)
 
@@ -18,7 +17,7 @@ This repository demonstrates a secure CI/CD pipeline for the [Spring PetClinic](
 # Prerequisites
 
 - JFrog Artifactory with XRay enabled and linked.
-- XRay security policies configured to block builds on critical vulnerabilities.
+- XRay security policies configured to block builds on high+ vulnerabilities.
 - GitHub repository secrets set: `JF_URL` and `JF_ACCESS_TOKEN`.
 
 Pipeline defined in `.github/workflows/ci-build.yml`:
