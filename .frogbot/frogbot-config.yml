@@ -7,4 +7,3 @@
       projects:
         - workingDirs:
             - app/spring-petclinic
-          installCommand: chmod +x gradlew
