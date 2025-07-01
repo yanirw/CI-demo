@@ -10,7 +10,6 @@ This repository demonstrates a secure CI/CD pipeline for the [Spring PetClinic](
 - Image pushed to JFrog Artifactory
 - XRay scan with SBOM generation and vulnerability blocking
 - Kubernetes deployment via Helm chart
-- GitHub security tools enabled (code scanning, secret scanning)
 - Branch protection enforced (PRs only, required checks)
 
 
