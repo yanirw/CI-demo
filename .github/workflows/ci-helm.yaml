@@ -9,6 +9,10 @@ on:
     paths:
       - 'infra/helm/**'
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   helm_check:
     name: Helm Check
