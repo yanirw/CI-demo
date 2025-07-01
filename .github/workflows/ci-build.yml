@@ -129,8 +129,8 @@ jobs:
         JFROG_CLI_BUILD_NUMBER: ${{ needs.build.outputs.image-tag }}
       run: |
         echo "📊 Retrieving XRay scan results..."
-        jf build-scan $JFROG_CLI_BUILD_NAME $JFROG_CLI_BUILD_NUMBER --format=json --output-file=xray-scan-results.json || \
-        echo "{\"status\":\"scanned\",\"note\":\"Check JFrog XRay dashboard for full results\"}" > xray-scan-results.json
+        jf build-scan "$JFROG_CLI_BUILD_NAME" "$JFROG_CLI_BUILD_NUMBER" --format=json > xray-scan-results.json || \
+        echo '{"status":"scan_failed","note":"See XRay dashboard for results"}' > xray-scan-results.json
 
     - name: Upload scan results
       uses: actions/upload-artifact@v4
