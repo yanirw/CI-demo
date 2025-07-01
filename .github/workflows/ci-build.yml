@@ -25,7 +25,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-  
+    - name: gradlew permissions
+      run: |
+        chmod +x app/spring-petclinic/gradlew
+
     - name: Frogbot Security Scan
       uses: jfrog/frogbot@v2.26.3
       env:
