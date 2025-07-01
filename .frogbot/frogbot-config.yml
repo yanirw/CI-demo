@@ -1,0 +1,10 @@
+- params:
+    git:
+      repoName: github.com/yanirw/CI-demo.git
+      branches:
+        - main
+    scan:
+      projects:
+        - workingDirs:
+            - app/spring-petclinic
+          installCommand: chmod +x gradlew
