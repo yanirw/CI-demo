@@ -59,6 +59,18 @@ jobs:
         JF_URL: ${{ env.JF_URL }}
         JF_ACCESS_TOKEN: ${{ env.JF_ACCESS_TOKEN }}
 
+    - name: Scan local dependencies before build
+      working-directory: app/spring-petclinic
+      run: |
+        echo "🔍 Scanning local project dependencies for High+ severity vulnerabilities..."
+        jf audit --fail=true --min-severity=High --format=table || {
+          echo "❌ SECURITY SCAN FAILED: High or Critical vulnerabilities found in project dependencies!"
+          echo "📋 Check the scan output above for details on vulnerable packages"
+          echo "🔧 Action required: Update vulnerable dependencies before proceeding"
+          exit 1
+        }
+        echo "✅ Local dependency scan passed - no High+ severity vulnerabilities found"
+
     - name: Build and push Docker image
       working-directory: app/spring-petclinic
       env:
@@ -96,14 +108,20 @@ jobs:
         echo "Waiting for XRay"
         sleep 30
 
-    - name: Audit build against XRay policies (fail on critical vulns)
+    - name: Audit build against XRay policies (fail on high vulns)
       env:
         JFROG_CLI_BUILD_NAME: ${{ env.BUILD_NAME }}
         JFROG_CLI_BUILD_NUMBER: ${{ needs.build.outputs.image-tag }}
       run: |
-        echo "Auditing build against XRay security policies..."
-        jf audit --build-name=$JFROG_CLI_BUILD_NAME --build-number=$JFROG_CLI_BUILD_NUMBER
-        echo "Build passed XRay security policy audit"
+        echo "🛡️ Auditing build '$JFROG_CLI_BUILD_NAME:$JFROG_CLI_BUILD_NUMBER' against XRay security policies..."
+        jf build-scan $JFROG_CLI_BUILD_NAME $JFROG_CLI_BUILD_NUMBER --format=table || {
+          echo "❌ XRAY POLICY VIOLATION: Build failed security policy checks!"
+          echo "🚨 High or Critical vulnerabilities found in published artifacts"
+          echo "📊 Check XRay dashboard: ${{ env.JF_URL }}/ui/scans-list/builds/$JFROG_CLI_BUILD_NAME/$JFROG_CLI_BUILD_NUMBER"
+          echo "🔧 Action required: Review and remediate vulnerabilities before deployment"
+          exit 1
+        }
+        echo "✅ Build passed XRay security policy audit - safe for deployment"
 
     - name: Retrieve XRay scan results
       env:
