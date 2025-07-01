@@ -1,60 +1,61 @@
-# 🛡️DevSecOps Pipeline: Spring PetClinic
+# 🛡️ DevSecOps Pipeline: Spring PetClinic
 
-This repository demonstrates a secure CI pipeline, Dockerfile creation and Helm charts based on DevSecOps best practices for the [Spring PetClinic](https://github.com/spring-projects/spring-petclinic) application, built using GitHub Actions, Docker, Helm, and JFrog Artifactory/XRay.
+A DevSecOps pipeline implementation showcasing modern security practices through the [Spring PetClinic](https://github.com/spring-projects/spring-petclinic) application. This repository demonstrates how to integrate multi-layer security scanning, policy enforcement, and compliance reporting into CI workflows using GitHub Actions, JFrog Platform, and Kubernetes.
 
 ## Features
 
-- GitHub’s built-in SAST, secret scanning and Dependabot applied as PR gates  
-- Secure Dockerfile with non-root user and multi-stage build
-- Image pushed to JFrog Artifactory
-- XRay scan with SBOM generation and vulnerability blocking (High vulnerability and above will fail the build and make artifacts blocked)
-- Kubernetes deployment via Helm chart
-- Branch protection enforced (PRs only, required checks)
+**Multi-Layer Security Scanning:**
+- Pre-build dependency scan (SCA, secrets, SAST) with JFrog CLI
+- Post-build policy enforcement via JFrog XRay
+- GitHub native security (Dependabot, secret scanning, CodeQL)
 
+**Container Security:**
+- Multi-stage Dockerfile with non-root user
+- Secure image builds and distribution via JFrog Artifactory
+- Vulnerability blocking on High+ severity findings
 
 ## CI Pipeline Overview
 
 # Prerequisites
 
-- JFrog Artifactory with XRay enabled and linked.
-- XRay security policies configured to block builds on high+ vulnerabilities.
-- GitHub repository secrets set: `JF_URL` and `JF_ACCESS_TOKEN`.
+- JFrog Artifactory with XRay policies configured
+- GitHub secrets: `JF_URL`, `JF_ACCESS_TOKEN`
 
-Pipeline defined in `.github/workflows/ci-build.yml`:
+**Pipeline Flow:**
 
-1. Security scan (code + secrets)
-2. Build and test the application
-3. Build Docker image
-4. Push to Artifactory
-5. XRay scan and SBOM generation
+1. **Build Preparation**
+   - Generate unique image tags from Git commit SHA
+   - Parse Docker registry endpoints from JFrog URL
+   - Set up environment variables for downstream jobs
 
+2. **Pre-Build Security Scan** 
+   - Scan local project dependencies (Maven/Gradle) for vulnerabilities
+   - Run SCA (Software Composition Analysis), secrets detection, and SAST
+   - **Fail-fast approach**: Build stops immediately on High+ severity CVEs
+   - Prevents building and distributing vulnerable artifacts
 
-## Repository Structure
+3. **Container Build & Push**
+   - Build secure multi-stage Docker image with non-root user
+   - Push container to JFrog Artifactory repository
+   - Collect build metadata and Git information
+   - Publish build info to JFrog for tracking and governance
+
+4. **Post-Build Policy Enforcement**
+   - Scan published artifacts against JFrog XRay security policies
+   - Enforce organizational security standards and compliance requirements
+   - **Automatic deployment blocking**: High+ severity CVEs trigger immediate build failure
+   - Generate comprehensive vulnerability reports with remediation guidance
+
+5. **Compliance & Reporting**
+   - Generate Software Bill of Materials (SBOM)
+   - Export security scan results in JSON format
+   - Upload artifacts for audit trails and compliance reporting
+
+## 📁 Repository Structure
 
 ```
 ├── .github/workflows/        # CI pipeline
 ├── app/spring-petclinic/     # Source code + Dockerfile
 ├── infra/helm/               # Helm chart for deployment
 ```
-# Run the Docker image locally:
 
-```bash
-docker pull yanirlab.jfrog.io/petclinic-docker/spring-petclinic:8595ea4f
-docker run -p 8080:8080 yanirlab.jfrog.io/petclinic-docker/spring-petclinic:8595ea4f
-```
-
-Access the app at: http://localhost:8080
-
-# Run with Helm (example)
-
-```bash
-helm upgrade --install petclinic ./infra/helm \
-  --set image.repository=yanirlab.jfrog.io/petclinic-docker/spring-petclinic \
-  --set image.tag=8595ea4f
-```
-
-## Exportable Artifacts
-
-- Docker image
-- Deployment Helm chart
-- XRay scan report + SBOM (JSON)
