@@ -1,11 +1,13 @@
 # 🛡️ DevSecOps Pipeline: Spring PetClinic
 
+[![Scanned by Frogbot](https://raw.github.com/jfrog/frogbot/master/images/frogbot-badge.svg)](https://docs.jfrog-applications.jfrog.io/jfrog-applications/frogbot)
+
 A DevSecOps pipeline implementation showcasing modern security practices through the [Spring PetClinic](https://github.com/spring-projects/spring-petclinic) application. This repository demonstrates how to integrate multi-layer security scanning, policy enforcement, and compliance reporting into CI workflows using GitHub Actions, JFrog Platform, and Kubernetes.
 
 ## Features
 
 ### Multi-Layer Security Scanning
-- Pre-build dependency scan (SCA, secrets, SAST) with JFrog CLI
+- Pre-build dependency scan (SCA, secrets, SAST) with Frogbot
 - Post-build policy enforcement via JFrog XRay
 - GitHub native security (Dependabot, secret scanning, CodeQL)
 
@@ -29,9 +31,9 @@ A DevSecOps pipeline implementation showcasing modern security practices through
    - Set up environment variables for downstream jobs
 
 2. **Pre-Build Security Scan** 
-   - Scan local project dependencies (Maven/Gradle) for vulnerabilities
+   - Automated security scanning of pull requests with Frogbot
    - Run SCA (Software Composition Analysis), secrets detection, and SAST
-   - **Fail-fast approach**: Build stops immediately on High+ severity CVEs
+   - **Interactive feedback**: Security findings posted directly on pull requests
    - Prevents building and distributing vulnerable artifacts
 
 3. **Container Build & Push**
