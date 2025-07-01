@@ -26,17 +26,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup JFrog CLI
-      uses: jfrog/setup-jfrog-cli@v4
+    - name: Frogbot
+      uses: jfrog/frogbot@v2.26.3
       env:
         JF_URL: ${{ env.JF_URL }}
         JF_ACCESS_TOKEN: ${{ env.JF_ACCESS_TOKEN }}
-
-    - name: Scan local dependencies before build
-      working-directory: app/spring-petclinic
-      run: |
-        echo "🔍 Scanning local project dependencies..."
-        jf audit --fail=true --min-severity=High
+        JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        JF_WORKING_DIR: app/spring-petclinic
 
   build:
     if: github.event.pull_request.merged == true
