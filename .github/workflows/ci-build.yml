@@ -1,7 +1,6 @@
 name: DevSecOps CI Pipeline
 
 on:
-  workflow_dispatch:
   pull_request:
     types: [opened, closed]
     branches: [main]
@@ -33,6 +32,7 @@ jobs:
         JF_ACCESS_TOKEN: ${{ env.JF_ACCESS_TOKEN }}
         JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         JF_WORKING_DIR: app/spring-petclinic
+        JF_GIT_BASE_BRANCH: main
 
   build:
     if: github.event.pull_request.merged == true
