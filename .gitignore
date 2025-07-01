@@ -1,0 +1,35 @@
+# Build output
+target/
+build/
+*.jar
+*.war
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS files
+.DS_Store
+Thumbs.db
+*~
+
+# Logs
+*.log
+logs/
+
+# Security & secrets
+.env
+*.key
+*.crt
+*.pem
+secrets/
+
+# JFrog
+.jfrog/
+
+# CI artifacts
+xray-scan-results.json
+build-info.json 

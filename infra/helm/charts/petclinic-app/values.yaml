@@ -132,10 +132,3 @@ externalSecrets:
     kind: SecretStore
   refreshInterval: 1h
 
-# Network policies
-networkPolicy:
-  enabled: true
-  ingress:
-    enabled: true
-  egress:
-    enabled: true 

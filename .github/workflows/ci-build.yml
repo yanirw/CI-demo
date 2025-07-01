@@ -1,17 +1,14 @@
-name: DevSecOps Pipeline
+name: DevSecOps CI Pipeline
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
-    branches: [ main ]
+    types: [closed]
+    branches: [main]
 
 permissions:
   contents: read
   security-events: write
-  pull-requests: write
-  actions: read
-  id-token: write
+
 
 env:
   JF_URL: ${{ secrets.JF_URL }}
@@ -21,6 +18,7 @@ env:
 
 jobs:
   build:
+    if: github.event.pull_request.merged == true
     name: Build & Test
     runs-on: ubuntu-latest
     outputs:
@@ -37,7 +35,7 @@ jobs:
         echo "tag=$TAG" >> $GITHUB_OUTPUT
         echo "Generated image tag: $TAG"
 
-    - name: Calculate Docker registry
+    - name: Parse Docker registry from JF_URL
       id: docker-registry
       run: |
         DOCKER_REGISTRY=$(echo "${{ env.JF_URL }}" | sed 's|https://||')
@@ -45,9 +43,10 @@ jobs:
         echo "Docker registry: $DOCKER_REGISTRY"
 
   container-build:
+    if: github.event.pull_request.merged == true
     name: Container Build & Push
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: build
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -58,11 +57,6 @@ jobs:
         JF_URL: ${{ env.JF_URL }}
         JF_ACCESS_TOKEN: ${{ env.JF_ACCESS_TOKEN }}
 
-    - name: Validate JFrog connection
-      run: |
-        jf rt ping
-        echo "JFrog connection validated"
-
     - name: Build and push Docker image
       working-directory: app/spring-petclinic
       env:
@@ -70,16 +64,11 @@ jobs:
         DOCKER_REGISTRY: ${{ needs.build.outputs.docker-registry }}
       run: |
         FULL_IMAGE="$DOCKER_REGISTRY/petclinic-docker/${{ env.IMAGE_NAME }}"
-        
         echo "Building image: $FULL_IMAGE:$IMAGE_TAG"
         jf docker build -t $FULL_IMAGE:$IMAGE_TAG .
         jf docker push $FULL_IMAGE:$IMAGE_TAG
-        
-        echo "Tagging and pushing latest"
-        docker tag $FULL_IMAGE:$IMAGE_TAG $FULL_IMAGE:latest
-        jf docker push $FULL_IMAGE:latest
 
-    - name: Publish build info
+    - name: Publish build info to JFrog
       env:
         JFROG_CLI_BUILD_NAME: ${{ env.BUILD_NAME }}
         JFROG_CLI_BUILD_NUMBER: ${{ needs.build.outputs.image-tag }}
@@ -88,24 +77,11 @@ jobs:
         jf rt build-add-git
         jf rt build-publish
 
-    - name: Comment on PR
-      if: github.event_name == 'pull_request'
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const imageRef = '${{ needs.build.outputs.docker-registry }}/petclinic-docker/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }}';
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: `Docker image built and published successfully.\n\n**Image:** \`${imageRef}\``
-          })
-
   security-scan:
+    if: github.event.pull_request.merged == true
     name: Security Scanning
     runs-on: ubuntu-latest
-    needs: [container-build, build]
+    needs: [build, container-build]
     steps:
     - name: Setup JFrog CLI
       uses: jfrog/setup-jfrog-cli@v4
@@ -113,22 +89,28 @@ jobs:
         JF_URL: ${{ env.JF_URL }}
         JF_ACCESS_TOKEN: ${{ env.JF_ACCESS_TOKEN }}
 
-    - name: Retrieve XRay scan results
+    - name: Wait for XRay indexing
+      run: |
+        echo "Waiting for XRay"
+        sleep 30
+
+    - name: Audit build against XRay policies (fail on critical vulns)
       env:
-        IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
         JFROG_CLI_BUILD_NAME: ${{ env.BUILD_NAME }}
         JFROG_CLI_BUILD_NUMBER: ${{ needs.build.outputs.image-tag }}
       run: |
-        echo "Waiting for XRay indexing..."
-        sleep 30
-        
-        echo "Retrieving XRay scan results for build: $JFROG_CLI_BUILD_NAME/$JFROG_CLI_BUILD_NUMBER"
-        
-        # Get scan results from XRay (this queries existing results)
+        echo "Auditing build against XRay security policies..."
+        jf audit --build-name=$JFROG_CLI_BUILD_NAME --build-number=$JFROG_CLI_BUILD_NUMBER
+        echo "Build passed XRay security policy audit"
+
+    - name: Retrieve XRay scan results
+      env:
+        JFROG_CLI_BUILD_NAME: ${{ env.BUILD_NAME }}
+        JFROG_CLI_BUILD_NUMBER: ${{ needs.build.outputs.image-tag }}
+      run: |
+        echo "Retrieving XRay scan results..."
         jf build-scan $JFROG_CLI_BUILD_NAME $JFROG_CLI_BUILD_NUMBER --format=json --output-file=xray-scan-results.json || \
-        echo "{\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"build\":\"$JFROG_CLI_BUILD_NAME/$JFROG_CLI_BUILD_NUMBER\",\"status\":\"scanned\",\"note\":\"XRay security scan data - check JFrog platform for detailed results\"}" > xray-scan-results.json
-        
-        echo "XRay scan results retrieved"
+        echo "{\"status\":\"scanned\",\"note\":\"Check JFrog XRay dashboard for full results\"}" > xray-scan-results.json
 
     - name: Upload scan results
       uses: actions/upload-artifact@v4
@@ -136,17 +118,3 @@ jobs:
       with:
         name: xray-scan-results
         path: xray-scan-results.json
-
-    - name: Comment scan results on PR
-      if: github.event_name == 'pull_request'
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const imageRef = '${{ needs.build.outputs.docker-registry }}/petclinic-docker/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }}';
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: `XRay security scan completed for \`${imageRef}\`. Check artifacts for scan results and JFrog XRay dashboard for detailed analysis.`
-          })
