@@ -3,7 +3,6 @@
 # Enable/disable PostgreSQL deployment
 enabled: true
 
-# Authentication configuration
 auth:
   username: petclinic
   database: petclinic
@@ -12,16 +11,13 @@ auth:
   postgresPasswordKey: postgres-password
   passwordKey: password
 
-# Primary PostgreSQL configuration
 primary:
-  # Persistence configuration
   persistence:
     enabled: true
     size: 8Gi
     # storageClass: ""
     # existingClaim: ""
   
-  # Resource configuration
   resources:
     limits:
       memory: 256Mi
@@ -30,7 +26,6 @@ primary:
       memory: 128Mi
       cpu: 100m
 
-# Monitoring configuration
 metrics:
   enabled: true
   resources:
@@ -41,23 +36,19 @@ metrics:
       memory: 128Mi
       cpu: 100m
 
-# PostgreSQL image configuration
 image:
   repository: postgres
   tag: "16-alpine"
   pullPolicy: IfNotPresent
 
-# Security context
 securityContext:
   runAsNonRoot: true
   runAsUser: 999
   fsGroup: 999
 
-# Service configuration  
 service:
   type: ClusterIP
   port: 5432
 
-# Network policies
 networkPolicy:
   enabled: true 

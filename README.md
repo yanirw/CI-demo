@@ -2,7 +2,7 @@
 
 [![Scanned by Frogbot](https://raw.github.com/jfrog/frogbot/master/images/frogbot-badge.svg)](https://docs.jfrog-applications.jfrog.io/jfrog-applications/frogbot)
 
-A DevSecOps pipeline implementation showcasing modern security practices through the [Spring PetClinic](https://github.com/spring-projects/spring-petclinic) application. This repository demonstrates how to integrate multi-layer security scanning, policy enforcement, and compliance reporting into CI workflows using GitHub Actions, JFrog Platform, and Kubernetes.
+A DevSecOps pipeline built around the [Spring PetClinic](https://github.com/spring-projects/spring-petclinic) app, showcasing the integration of modern security best practices. This repo demonstrates how to embed multi-layer scanning, policy enforcement, and compliance reporting directly into CI workflows using GitHub Actions and the JFrog Platform.
 
 ## Features
 

@@ -15,20 +15,17 @@ image:
 # imagePullSecrets:
 #   - name: jfrog-registry-secret
 
-# Service account
 serviceAccount:
   create: true
   name: ""
   annotations: {}
 
-# Pod security context
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 1000
   runAsGroup: 1000
   fsGroup: 1000
 
-# Container security context
 securityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
@@ -38,17 +35,14 @@ securityContext:
     drop:
       - ALL
 
-# Deployment configuration
 replicaCount: 2
 
-# Service configuration
 service:
   type: ClusterIP
   port: 80
   targetPort: 8080
   annotations: {}
 
-# Ingress configuration
 ingress:
   enabled: false
   className: ""
@@ -60,7 +54,6 @@ ingress:
           pathType: Prefix
   tls: []
 
-# Resource limits and requests
 resources:
   limits:
     cpu: 500m
@@ -69,7 +62,6 @@ resources:
     cpu: 250m
     memory: 256Mi
 
-# Liveness and readiness probes
 livenessProbe:
   httpGet:
     path: /actuator/health/liveness
@@ -88,7 +80,6 @@ readinessProbe:
   timeoutSeconds: 5
   failureThreshold: 3
 
-# Auto-scaling configuration
 autoscaling:
   enabled: false
   minReplicas: 2
@@ -96,35 +87,29 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
 
-# Node selector, tolerations, and affinity
 nodeSelector: {}
 tolerations: []
 affinity: {}
 
-# Spring Boot configuration
 springboot:
   profiles:
     active: postgres
   jvm:
     opts: "-Xmx256m -Xms256m"
 
-# Database configuration
 database:
-  # Connection parameters
   port: 5432
   name: petclinic
   # Secret configuration (managed by External Secrets Operator)
   secretName: petclinic-db-secret
   usernameKey: username
   passwordKey: password
-  # External database configuration (for managed databases)
   external:
     enabled: false
     host: ""
     port: 5432
     database: petclinic
 
-# External secrets configuration
 externalSecrets:
   enabled: true
   secretStore:
