@@ -33,7 +33,7 @@ jobs:
         JF_URL: ${{ env.JF_URL }}
         JF_ACCESS_TOKEN: ${{ env.JF_ACCESS_TOKEN }}
         JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        JF_FAIL: "false"  # TEMP: Skip failure on security issues to allow full CI flow for testing/demo
+        # JF_FAIL: "false"  # TEMP: Skip failure on security issues to allow full CI flow for testing/demo
         
 
   build:
@@ -84,7 +84,7 @@ jobs:
         DOCKER_REGISTRY: ${{ needs.build.outputs.docker-registry }}
       run: |
         FULL_IMAGE="$DOCKER_REGISTRY/petclinic-docker/${{ env.IMAGE_NAME }}"
-        echo "🐳 Building image: $FULL_IMAGE:$IMAGE_TAG"
+        echo "Building image: $FULL_IMAGE:$IMAGE_TAG"
         jf docker build -t $FULL_IMAGE:$IMAGE_TAG .
         jf docker push $FULL_IMAGE:$IMAGE_TAG
 
@@ -93,7 +93,7 @@ jobs:
         JFROG_CLI_BUILD_NAME: ${{ env.BUILD_NAME }}
         JFROG_CLI_BUILD_NUMBER: ${{ needs.build.outputs.image-tag }}
       run: |
-        echo "📋 Publishing build info to JFrog..."
+        echo "Publishing build info to JFrog..."
         jf rt build-collect-env
         jf rt build-add-git
         jf rt build-publish
@@ -120,7 +120,7 @@ jobs:
         JFROG_CLI_BUILD_NAME: ${{ env.BUILD_NAME }}
         JFROG_CLI_BUILD_NUMBER: ${{ needs.build.outputs.image-tag }}
       run: |
-        echo "🛡️ Scanning build against XRay policies..."
+        echo "🛡️ Scanning build against XRay policies"
         jf build-scan $JFROG_CLI_BUILD_NAME $JFROG_CLI_BUILD_NUMBER
 
     - name: Retrieve XRay scan results
@@ -128,7 +128,7 @@ jobs:
         JFROG_CLI_BUILD_NAME: ${{ env.BUILD_NAME }}
         JFROG_CLI_BUILD_NUMBER: ${{ needs.build.outputs.image-tag }}
       run: |
-        echo "📊 Retrieving XRay scan results..."
+        echo "Retrieving XRay scan results"
         jf build-scan "$JFROG_CLI_BUILD_NAME" "$JFROG_CLI_BUILD_NUMBER" --format=json --vuln > xray-scan-results.json || \
         echo '{"note": "Scan failed or full JSON unavailable. View full results in XRay UI."}' > xray-scan-results.json
 

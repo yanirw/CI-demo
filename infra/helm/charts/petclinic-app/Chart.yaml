@@ -12,6 +12,3 @@ keywords:
 home: https://github.com/spring-projects/spring-petclinic
 sources:
   - https://github.com/spring-projects/spring-petclinic
-maintainers:
-  - name: DevSecOps Team
-    email: devsecops@example.com 
