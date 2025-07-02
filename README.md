@@ -20,8 +20,22 @@ A DevSecOps pipeline built around the [Spring PetClinic](https://github.com/spri
 
 - JFrog Artifactory with XRay policies configured
 - GitHub secrets: `JF_URL`, `JF_ACCESS_TOKEN`
+- Appropriate GitHub permissions
 
-## 🚀 CI Pipeline Overview
+## Usage
+
+To trigger the DevSecOps pipeline:
+
+1. **Make a change** in the `app/` directory (any file modification)
+2. **Create a Pull Request** targeting the `main` branch
+3. **Merge the PR** to trigger the full pipeline execution
+4. **Review the deployment PR** that gets automatically created for dev environment
+
+The pipeline only triggers on changes to application code (`app/**` path filter).
+
+**Note:** Pipeline will fail if High+ severity vulnerabilities are detected during security scans.
+
+## 🚀 DevSecOps CI Pipeline Overview
 
 ### Pipeline Flow
 
