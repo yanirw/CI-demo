@@ -53,6 +53,13 @@ A DevSecOps pipeline built around the [Spring PetClinic](https://github.com/spri
    - Export security scan results in JSON format
    - Upload artifacts for audit trails and compliance reporting
 
+6. **Dev Environment Deployment**
+   - Automatically update dev environment Helm values with new image tags
+   - Create deployment pull requests targeting **dev environment**
+   - **Deployment only occurs after PR approval** - ensuring manual review before dev deployment
+   - **GitOps workflow**: Infrastructure changes for dev follow the same review process as code
+   
+
 ## 📁 Repository Structure
 
 ```
