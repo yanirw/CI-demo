@@ -158,13 +158,13 @@ jobs:
         git config user.email "github-actions[bot]@users.noreply.github.com"
         
         BRANCH="deploy/dev-${IMAGE_TAG}"
-        git checkout -b "$BRANCH"
+        git checkout -B "$BRANCH"
         
         sed -i "s/tag: \"[^\"]*\"/tag: \"$IMAGE_TAG\"/" infra/helm/umbrella-petclinic/env/values-dev.yaml
         
         git add infra/helm/umbrella-petclinic/env/values-dev.yaml
         git commit -m "Deploy ${{ env.IMAGE_NAME }}:$IMAGE_TAG to dev"
-        git push origin "$BRANCH"
+        git push origin "$BRANCH" --force
         
         gh pr create \
           --title "Deploy ${{ env.IMAGE_NAME }}:$IMAGE_TAG to dev" \
