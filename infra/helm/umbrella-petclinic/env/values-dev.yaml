@@ -6,7 +6,7 @@ global:
 petclinic-app:
   replicaCount: 1
   image:
-    tag: "417f8e52"  
+    tag: "2661314e"  
   
   database:
     secretName: petclinic-dev-db-secret
