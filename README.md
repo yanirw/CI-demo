@@ -12,14 +12,14 @@ A DevSecOps pipeline built around the [Spring PetClinic](https://github.com/spri
 - GitHub native security (Dependabot, secret scanning, CodeQL)
 
 ### Container Security
-- Multi-stage Dockerfile with non-root user
+- Multi-stage Dockerfile 
 - Secure image builds and distribution via JFrog Artifactory
 - Vulnerability blocking on High+ severity findings
 
 ## Prerequisites
 
 - JFrog Artifactory with XRay policies configured
-- GitHub secrets: `JF_URL`, `JF_ACCESS_TOKEN`
+- GitHub secrets: `JF_URL`
 - Appropriate GitHub permissions
 
 ## Usage

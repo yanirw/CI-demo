@@ -13,7 +13,7 @@ permissions:
   security-events: write
 
 env:
-  JF_URL: ${{ vars.JF_URL }}
+  JF_URL: ${{ secrets.JF_URL }}
   IMAGE_NAME: spring-petclinic
   BUILD_NAME: petclinic-build
 
