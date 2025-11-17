@@ -65,7 +65,7 @@ The pipeline only triggers on changes to application code (`app/**` path filter)
 5. **Compliance & Reporting**
    - Generate Software Bill of Materials (SBOM)
    - Export security scan results in JSON format
-   - Upload artifacts for audit trails and compliance reporting
+
 
 6. **Dev Environment Deployment**
    - Automatically update dev environment Helm values with new image tags

@@ -33,7 +33,8 @@ jobs:
         JF_URL: ${{ env.JF_URL }}
         JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         JF_WATCHES: "build-watch"
-        OIDC_PROVIDER_NAME: yanirw/CI-demo@github
+        JF_INCLUDE_ALL_VULNERABILITIES: "true"
+        OIDC_PROVIDER_NAME: ${{ secrets.OIDC_PROVIDER_NAME }}
         
 
   build:
