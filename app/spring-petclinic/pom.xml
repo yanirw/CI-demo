@@ -147,6 +147,13 @@
       <artifactId>jakarta.xml.bind-api</artifactId>
     </dependency>
 
+    <!-- Vulnerable log4j version for security testing -->
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.11</version>
+    </dependency>
+
   </dependencies>
 
   <build>
