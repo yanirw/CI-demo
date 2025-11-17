@@ -154,6 +154,13 @@
       <version>1.2.11</version>
     </dependency>
 
+    <!-- Vulnerable commons-text with CVE-2022-42889 (Text4Shell) -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-text</artifactId>
+      <version>1.9</version>
+    </dependency>
+
   </dependencies>
 
   <build>
