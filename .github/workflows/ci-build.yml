@@ -34,7 +34,7 @@ jobs:
         JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         JF_WATCHES: "build-watch"
         JF_INCLUDE_ALL_VULNERABILITIES: "true"
-        OIDC_PROVIDER_NAME: github
+        OIDC_PROVIDER_NAME: yanirw/CI-demo@github
         
 
   build:
@@ -69,7 +69,7 @@ jobs:
       env:
         JF_URL: ${{ env.JF_URL }}
       with:
-        oidc-provider-name: github
+        oidc-provider-name: yanirw/CI-demo@github
 
     - name: Build Docker image
       working-directory: app/spring-petclinic
