@@ -1,36 +1,44 @@
-name: "Frogbot Security Scan"
-
+name: "Frogbot Scan Repository"
 on:
-  pull_request_target: 
-    types: [opened, synchronize] # Triggers scan-pr flow for every opened/updated pull request
-  push: # Triggers scan-repo flow for every push to the specified branches
+  workflow_dispatch:
+  schedule:
+    # The repository will be scanned once a day at 00:00 GMT.
+    - cron: "0 0 * * *"
+  push:
     branches:
       - main
-  schedule:
-    - cron: "0 0 * * *"   # The repository will be scanned once a day at 00:00 GMT.
-  workflow_dispatch: # The repository will be scanned on demand
-
 permissions:
-  pull-requests: write
   contents: write
+  pull-requests: write
   security-events: write
   # [Mandatory If using OIDC authentication protocol instead of JF_ACCESS_TOKEN]
-  id-token: write
-
+  # id-token: write
 jobs:
-  frogbot-scan:
+  scan-repository:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # The repository scanning will be triggered periodically on the following branches.
+        # The repository scanning will be triggered on the main branch.
         branch: ["main"]
     steps:
       - uses: jfrog/frogbot@v2
+        env:
+          # [Mandatory]
+          JF_URL: ${{ secrets.JF_URL }}
+
+        #   # [Mandatory if JF_USER and JF_PASSWORD are not provided]
+        #   JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
+
+        #   # [Mandatory if JF_ACCESS_TOKEN is not provided]
+        #   JF_USER: ${{ secrets.JF_USER }}
+        #   JF_PASSWORD: ${{ secrets.JF_PASSWORD }}
+
+          # [Mandatory]
+          JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # [Mandatory]
+          JF_GIT_BASE_BRANCH: ${{ matrix.branch }}
+
         # [Mandatory if using OIDC authentication protocol instead of JF_ACCESS_TOKEN]
-        # Insert to oidc-provider-name the 'Provider Name' defined in the OIDC integration configured in the JPD
         with:
           oidc-provider-name: yanirw/CI-demo@github
-        env:
-          JF_URL: ${{ vars.JF_URL }}
-          JF_GIT_TOKEN: ${{ secrets.JF_GIT_TOKEN }}
-          JF_GIT_BASE_BRANCH: ${{ matrix.branch }}    # For repository scan action

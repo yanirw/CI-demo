@@ -16,7 +16,7 @@ env:
   JF_URL: ${{ secrets.JF_URL }}
   IMAGE_NAME: spring-petclinic
   BUILD_NAME: petclinic-build
-  JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  JFROG_CLI_LOG_LEVEL: "DEBUG"
 
 
 jobs:
