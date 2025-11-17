@@ -19,7 +19,7 @@ A DevSecOps pipeline built around the [Spring PetClinic](https://github.com/spri
 ## Prerequisites
 
 - JFrog Artifactory with XRay policies configured
-- GitHub secrets: `JF_URL`, `JF_ACCESS_TOKEN`
+- GitHub secrets: `JF_URL`
 - Appropriate GitHub permissions
 
 ## Usage
