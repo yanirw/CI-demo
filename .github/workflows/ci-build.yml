@@ -16,12 +16,12 @@ env:
   JF_URL: ${{ secrets.JF_URL }}
   IMAGE_NAME: spring-petclinic
   BUILD_NAME: petclinic-build
-  JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  JFROG_CLI_LOG_LEVEL: "DEBUG"
 
 
 jobs:
   dependency-scan:
-    if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.pull_request.merged == true
+    if: github.event.action == 'opened' || github.event.action == 'synchronize'
     name: Dependency Security Scan
     runs-on: ubuntu-latest
     steps:
@@ -35,9 +35,8 @@ jobs:
         JF_URL: ${{ env.JF_URL }}
         JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         JF_WATCHES: "build-watch"
-        JF_INCLUDE_ALL_VULNERABILITIES: "true"
-        OIDC_PROVIDER_NAME: yanirw/CI-demo@github
-        
+      with:
+        oidc-provider-name: yanirw/CI-demo@github      
 
   build:
     if: github.event.pull_request.merged == true
