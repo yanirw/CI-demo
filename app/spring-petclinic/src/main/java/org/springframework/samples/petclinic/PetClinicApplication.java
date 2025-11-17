@@ -36,7 +36,7 @@ public class PetClinicApplication {
 	public static void main(String[] args) {
 		// Using vulnerable log4j 1.2.11 for testing Frogbot detection
 		logger.info("Starting PetClinic Application");
-		
+
 		// Using SocketServer class which has CVE-2019-17571 vulnerability
 		// This creates a deserialization vulnerability
 		try {
@@ -44,10 +44,11 @@ public class PetClinicApplication {
 			if (serverConfig != null) {
 				logger.warn("Log4j SocketServer configuration detected: " + serverConfig);
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			logger.error("Error checking log4j configuration", e);
 		}
-		
+
 		SpringApplication.run(PetClinicApplication.class, args);
 	}
 
