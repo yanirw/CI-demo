@@ -19,7 +19,7 @@ env:
 
 jobs:
   dependency-scan:
-    if: github.event.action == 'opened' || github.event.pull_request.merged == true
+    if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.pull_request.merged == true
     name: Dependency Security Scan
     runs-on: ubuntu-latest
     steps:
@@ -34,7 +34,7 @@ jobs:
         JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         JF_WATCHES: "build-watch"
         JF_INCLUDE_ALL_VULNERABILITIES: "true"
-        OIDC_PROVIDER_NAME: ${{ secrets.OIDC_PROVIDER_NAME }}
+        OIDC_PROVIDER_NAME: yanirw/CI-demo@github
         
 
   build:
