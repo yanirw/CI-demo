@@ -1,0 +1,24 @@
+name: "Frogbot Scan Pull Request"
+on:
+  pull_request_target:
+    types: [opened, synchronize]
+permissions:
+  pull-requests: write
+  contents: read
+  id-token: write
+jobs:
+  scan-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jfrog/frogbot@v2
+        env:
+          # [Mandatory]
+          JF_URL: ${{ secrets.JF_URL }}
+
+          # [Mandatory]
+          JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+        # [Mandatory if using OIDC authentication protocol instead of JF_ACCESS_TOKEN]
+        with:
+          oidc-provider-name: yanirw/CI-demo@github
+
