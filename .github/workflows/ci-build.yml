@@ -16,6 +16,8 @@ env:
   JF_URL: ${{ secrets.JF_URL }}
   IMAGE_NAME: spring-petclinic
   BUILD_NAME: petclinic-build
+  JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
 jobs:
   dependency-scan:
@@ -28,7 +30,7 @@ jobs:
 
 
     - name: Frogbot Security Scan
-      uses: jfrog/frogbot@v2.29.1
+      uses: jfrog/frogbot@v2
       env:
         JF_URL: ${{ env.JF_URL }}
         JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
