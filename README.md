@@ -1,89 +1,139 @@
-# 🛡️ DevSecOps Pipeline: Spring PetClinic
+# 🛡️ DevSecOps CI/CD Demo with JFrog Platform
 
 [![Scanned by Frogbot](https://raw.github.com/jfrog/frogbot/master/images/frogbot-badge.svg)](https://docs.jfrog-applications.jfrog.io/jfrog-applications/frogbot)
 
-A DevSecOps pipeline built around the [Spring PetClinic](https://github.com/spring-projects/spring-petclinic) app, showcasing the integration of modern security best practices. This repo demonstrates how to embed multi-layer scanning, policy enforcement, and compliance reporting directly into CI workflows using GitHub Actions and the JFrog Platform.
+A complete DevSecOps pipeline demonstrating **JFrog Platform integration** with GitHub Actions, featuring OIDC authentication, multi-layer security scanning, and policy enforcement.
 
-## Features
+## 🎯 Key Features
 
-### Multi-Layer Security Scanning
-- Pre-build dependency scan (SCA, secrets, SAST) with Frogbot
-- Post-build policy enforcement via JFrog XRay
-- GitHub native security (Dependabot, secret scanning, CodeQL)
+### 🔐 Secure Authentication
+- **OIDC Integration**: Zero static tokens - authenticate to JFrog using GitHub's OIDC provider
+- Automatic token rotation and secure credential management
 
-### Container Security
-- Multi-stage Dockerfile 
-- Secure image builds and distribution via JFrog Artifactory
-- Vulnerability blocking on High+ severity findings
+### 📦 Unified Dependency Management
+- **Maven & Gradle**: All dependencies proxied through JFrog Artifactory
+- **Docker Base Images**: Pulled through JFrog for caching and security scanning
+- Single source of truth for all artifacts
 
-## Prerequisites
+### 🛡️ Multi-Layer Security
+- **Pre-Merge**: Frogbot scans PRs for vulnerabilities, secrets, and license issues
+- **Build-Time**: Docker images scanned before push (security gate)
+- **Post-Build**: XRay policy enforcement with watch-based scanning
+- **Fail-Fast**: Builds blocked on policy violations
 
-- JFrog Artifactory with XRay policies configured
-- GitHub secrets: `JF_URL`
-- Appropriate GitHub permissions
+### 🚀 CI/CD Workflows
 
-## Usage
+**Maven/Gradle Builds** (`ci-maven.yml`, `ci-gradle.yml`)
+- Dependencies resolved from JFrog via `jf mvn` and `jf gradle` commands
+- Automatic configuration through JFrog CLI
 
-To trigger the DevSecOps pipeline:
+**Docker Build** (`ci-build.yml`)
+```
+Build → Scan → Push → Publish → XRay Scan
+```
+1. Build Docker image with base images from JFrog
+2. Scan locally with XRay
+3. Push to JFrog only if scan passes
+4. Publish build info for traceability
+5. Scan build against XRay watches
 
-1. **Make a change** in the `app/` directory (any file modification)
-2. **Create a Pull Request** targeting the `main` branch
-3. **Merge the PR** to trigger the full pipeline execution
-4. **Review the deployment PR** that gets automatically created for dev environment
+**Frogbot PR Scanning** (`frogbot-scan-pull-request.yaml`)
+- Automated security scanning on every PR
+- Comments findings directly on pull requests
 
-The pipeline only triggers on changes to application code (`app/**` path filter).
+## 📋 Prerequisites
 
-**Note:** Pipeline will fail if High+ severity vulnerabilities are detected during security scans.
+### JFrog Configuration
+- Artifactory with repositories:
+  - `demo-dev-libs-release` (Maven)
+  - `demo-dev-gradle-dev` (Gradle)
+  - `demo-docker` (Docker virtual with remote proxy)
+- XRay watches and policies configured
+- OIDC integration set up
 
-## 🚀 DevSecOps CI Pipeline Overview
+### GitHub Configuration
+- **Secrets**:
+  - `JF_URL`: JFrog platform URL (e.g., `https://yourcompany.jfrog.io`)
+- **Variables**:
+  - `DOCKER_REPO`: Docker repository path (e.g., `yourcompany.jfrog.io/demo-docker`)
+- **Permissions**:
+  - `id-token: write` (for OIDC)
+  - `contents: write`
+  - `pull-requests: write`
+  - `security-events: write`
 
-### Pipeline Flow
+## 🚀 Usage
 
-1. **Build Preparation**
-   - Generate unique image tags from Git commit SHA
-   - Parse Docker registry endpoints from JFrog URL
-   - Set up environment variables for downstream jobs
+### Trigger the Pipeline
 
-2. **Pre-Build Security Scan** 
-   - Automated security scanning of pull requests with Frogbot
-   - Run SCA (Software Composition Analysis), secrets detection, and SAST
-   - **Interactive feedback**: Security findings posted directly on pull requests
-   - Prevents building and distributing vulnerable artifacts
+Changes to `app/**` trigger the workflows:
 
-3. **Container Build & Push**
-   - Build secure multi-stage Docker image with non-root user
-   - Push container to JFrog Artifactory repository
-   - Collect build metadata and Git information
-   - Publish build info to JFrog for tracking and governance
+```bash
+# Make a change
+echo "# Update" >> app/spring-petclinic/README.md
 
-4. **Post-Build Policy Enforcement**
-   - Scan published artifacts against JFrog XRay security policies
-   - Enforce organizational security standards and compliance requirements
-   - **Automatic deployment blocking**: High+ severity CVEs trigger immediate build failure
-   - Generate comprehensive vulnerability reports with remediation guidance
+# Create PR
+git checkout -b feature/my-change
+git add .
+git commit -m "feat: my feature"
+git push origin feature/my-change
+gh pr create --title "My Feature" --body "Description"
 
-5. **Compliance & Reporting**
-   - Generate Software Bill of Materials (SBOM)
-   - Export security scan results in JSON format
-   - Upload artifacts for audit trails and compliance reporting
+# Merge to trigger full pipeline
+gh pr merge --merge
+```
 
-6. **Dev Environment Deployment**
-   - Automatically update dev environment Helm values with new image tags
-   - Create deployment pull requests targeting **dev environment**
-   - **Deployment only occurs after PR approval** - ensuring manual review before dev deployment
-   - **GitOps workflow**: Infrastructure changes for dev follow the same review process as code
-   
+### Pipeline Behavior
+
+- **PR Opened**: Frogbot scans for vulnerabilities
+- **PR Merged**: Full build pipeline executes
+  - Maven/Gradle builds resolve deps from JFrog
+  - Docker build pulls base images through JFrog
+  - Security scans at multiple stages
+  - **Deployment blocked if security violations found**
 
 ## 📁 Repository Structure
 
 ```
 CI-demo/
-├── .github/workflows/        # CI pipeline configuration
-├── app/spring-petclinic/     # Spring PetClinic application + Dockerfile
-└── infra/helm/              # Helm charts for Kubernetes deployment
-    ├── charts/
-    │   ├── petclinic-app/   # Application chart
-    │   └── postgresql/      # Database chart
-    └── umbrella-petclinic/  # Umbrella chart
+├── .github/workflows/
+│   ├── ci-build.yml                    # Docker build with security scanning
+│   ├── ci-maven.yml                    # Maven build via JFrog
+│   ├── ci-gradle.yml                   # Gradle build via JFrog
+│   ├── frogbot-scan-pull-request.yaml  # PR security scanning
+│   └── frogbot-scan-repository.yaml    # Repository scanning
+├── app/spring-petclinic/               # Spring Boot application
+│   ├── Dockerfile                      # Multi-stage secure build
+│   ├── pom.xml                         # Maven config (no JFrog URLs!)
+│   └── build.gradle                    # Gradle config (no JFrog URLs!)
+└── infra/helm/                         # Kubernetes deployment charts
 ```
 
+## 🔑 Key Design Principles
+
+1. **No Credentials in Code**: OIDC authentication eliminates static tokens
+2. **Clean Source Code**: JFrog URLs only in CI workflows, not in app code
+3. **Security Gates**: Multiple scan points with automatic blocking
+4. **Fail Fast**: Violations caught early, before deployment
+5. **Full Traceability**: Build info published for audit and governance
+
+## 🛠️ Technology Stack
+
+- **Application**: Spring Boot (PetClinic)
+- **CI/CD**: GitHub Actions
+- **Artifact Management**: JFrog Artifactory
+- **Security Scanning**: JFrog XRay, Frogbot
+- **Container Runtime**: Docker
+- **Deployment**: Kubernetes + Helm
+- **Authentication**: GitHub OIDC
+
+## 📖 Learn More
+
+- [JFrog CLI Documentation](https://jfrog.com/help/r/jfrog-cli)
+- [JFrog OIDC Integration](https://jfrog.com/help/r/jfrog-platform-administration-documentation/oidc-integration)
+- [Frogbot Documentation](https://docs.jfrog-applications.jfrog.io/jfrog-applications/frogbot)
+- [Spring PetClinic](https://github.com/spring-projects/spring-petclinic)
+
+---
+
+**Built with ❤️ to demonstrate modern DevSecOps practices**

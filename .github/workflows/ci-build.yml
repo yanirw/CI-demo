@@ -1,8 +1,7 @@
 name: DevSecOps CI Pipeline
 
 on:
-  pull_request:
-    types: [opened, closed]
+  push:
     branches: [main]
     paths: [ 'app/**' ]
 
@@ -14,39 +13,19 @@ permissions:
 
 env:
   JF_URL: ${{ secrets.JF_URL }}
+  DOCKER_REPO: winnik.jfrog.io/demo-docker
   IMAGE_NAME: spring-petclinic
   BUILD_NAME: petclinic-build
   JFROG_CLI_LOG_LEVEL: "DEBUG"
 
 
 jobs:
-  dependency-scan:
-    if: github.event.action == 'opened' || github.event.action == 'synchronize'
-    name: Dependency Security Scan
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-
-    - name: Frogbot Security Scan
-      uses: jfrog/frogbot@v2
-      env:
-        JF_URL: ${{ env.JF_URL }}
-        JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        JF_WATCHES: "build-watch"
-        JF_INCLUDE_ALL_VULNERABILITIES: "true"
-
-      with:
-        oidc-provider-name: yanirw/CI-demo@github      
-
   build:
-    if: github.event.pull_request.merged == true
     name: Build & Test
     runs-on: ubuntu-latest
-    needs: dependency-scan
     outputs:
       image-tag: ${{ steps.image-tag.outputs.tag }}
+      docker-registry: ${{ steps.docker-registry.outputs.registry }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -58,8 +37,14 @@ jobs:
         echo "tag=$TAG" >> $GITHUB_OUTPUT
         echo "Generated image tag: $TAG"
 
+    - name: Parse Docker registry from JF_URL
+      id: docker-registry
+      run: |
+        DOCKER_REGISTRY=$(echo "${{ env.JF_URL }}" | sed 's|https://||')
+        echo "registry=$DOCKER_REGISTRY" >> $GITHUB_OUTPUT
+        echo "Docker registry: $DOCKER_REGISTRY"
+
   container-build-and-scan:
-    if: github.event.pull_request.merged == true
     name: Container Build, Push & Security Scan
     runs-on: ubuntu-latest
     needs: build
@@ -74,13 +59,19 @@ jobs:
       with:
         oidc-provider-name: yanirw/CI-demo@github
 
+    - name: Docker login to JFrog
+      env:
+        DOCKER_REGISTRY: ${{ needs.build.outputs.docker-registry }}
+      run: |
+        echo "Logging into JFrog Docker registry: $DOCKER_REGISTRY"
+        jf docker login $DOCKER_REGISTRY
+
     - name: Build Docker image
       working-directory: app/spring-petclinic
       env:
         IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
-        DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
       run: |
-        FULL_IMAGE="$DOCKER_REPO/${{ env.IMAGE_NAME }}"
+        FULL_IMAGE="${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}"
         echo "Building image: $FULL_IMAGE:$IMAGE_TAG"
         jf docker build -t $FULL_IMAGE:$IMAGE_TAG .
 
@@ -88,9 +79,8 @@ jobs:
       working-directory: app/spring-petclinic
       env:
         IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
-        DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
       run: |
-        FULL_IMAGE="$DOCKER_REPO/${{ env.IMAGE_NAME }}"
+        FULL_IMAGE="${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}"
         echo "🛡️ Scanning Docker image locally before push: $FULL_IMAGE:$IMAGE_TAG"
         jf docker scan $FULL_IMAGE:$IMAGE_TAG --watches="docker-security-watch"
 
@@ -98,9 +88,8 @@ jobs:
       working-directory: app/spring-petclinic
       env:
         IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
-        DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
       run: |
-        FULL_IMAGE="$DOCKER_REPO/${{ env.IMAGE_NAME }}"
+        FULL_IMAGE="${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}"
         echo "Pushing image: $FULL_IMAGE:$IMAGE_TAG"
         jf docker push $FULL_IMAGE:$IMAGE_TAG
 
@@ -120,6 +109,8 @@ jobs:
         JFROG_CLI_BUILD_NUMBER: ${{ needs.build.outputs.image-tag }}
       run: |
         echo "🛡️ Scanning build against XRay policies"
-        jf build-scan $JFROG_CLI_BUILD_NAME $JFROG_CLI_BUILD_NUMBER --watches="docker-security-watch"
+        # Build name and number are automatically read from environment variables
+        # Scans against all configured XRay watches and policies
+        jf build-scan --extended-table
 
  
