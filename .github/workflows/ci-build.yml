@@ -13,6 +13,7 @@ permissions:
 
 env:
   JF_URL: ${{ secrets.JF_URL }}
+  DOCKER_REPO: ${{ vars.DOCKER_REPO }}
   IMAGE_NAME: spring-petclinic
   BUILD_NAME: petclinic-build
   JFROG_CLI_LOG_LEVEL: "DEBUG"
@@ -54,9 +55,8 @@ jobs:
       working-directory: app/spring-petclinic
       env:
         IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
-        DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
       run: |
-        FULL_IMAGE="$DOCKER_REPO/${{ env.IMAGE_NAME }}"
+        FULL_IMAGE="${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}"
         echo "Building image: $FULL_IMAGE:$IMAGE_TAG"
         jf docker build -t $FULL_IMAGE:$IMAGE_TAG .
 
@@ -64,9 +64,8 @@ jobs:
       working-directory: app/spring-petclinic
       env:
         IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
-        DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
       run: |
-        FULL_IMAGE="$DOCKER_REPO/${{ env.IMAGE_NAME }}"
+        FULL_IMAGE="${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}"
         echo "🛡️ Scanning Docker image locally before push: $FULL_IMAGE:$IMAGE_TAG"
         jf docker scan $FULL_IMAGE:$IMAGE_TAG --watches="docker-security-watch"
 
@@ -74,9 +73,8 @@ jobs:
       working-directory: app/spring-petclinic
       env:
         IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
-        DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
       run: |
-        FULL_IMAGE="$DOCKER_REPO/${{ env.IMAGE_NAME }}"
+        FULL_IMAGE="${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}"
         echo "Pushing image: $FULL_IMAGE:$IMAGE_TAG"
         jf docker push $FULL_IMAGE:$IMAGE_TAG
 
