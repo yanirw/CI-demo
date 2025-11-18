@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim AS builder
+FROM winnik.jfrog.io/damo-dev-docker/eclipse-temurin:17-jdk-slim AS builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ COPY src ./src/
 RUN --mount=type=cache,target=/root/.m2 \
     ./mvnw clean package -DskipTests -B
 
-FROM gcr.io/distroless/java17-debian12:nonroot
+FROM winnik.jfrog.io/damo-dev-docker/gcr.io/distroless/java17-debian12:nonroot
 
 USER nonroot:nonroot
 

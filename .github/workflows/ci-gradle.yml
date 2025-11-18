@@ -1,5 +1,5 @@
-# This workflow will build a Java project with Gradle, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-java-with-gradle
+# This workflow will build a Java project with Gradle using JFrog Artifactory
+# Dependencies are resolved from Artifactory using JFrog CLI
 
 name: Java CI with Gradle
 
@@ -11,9 +11,15 @@ on:
     branches: [ main ]
     paths: [ 'app/**' ]
 
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  JF_URL: ${{ secrets.JF_URL }}
+
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -21,17 +27,26 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      
       - name: Set up JDK ${{matrix.java}}
         uses: actions/setup-java@v4
         with:
           java-version: ${{matrix.java}}
-          distribution: 'adopt'
-          cache: maven
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-      - name: Make Gradle Wrapper executable
-        run: chmod +x app/spring-petclinic/gradlew
-      - name: Build with Gradle
+          distribution: 'temurin'
+      
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: ${{ env.JF_URL }}
+        with:
+          oidc-provider-name: yanirw/CI-demo@github
+      
+      - name: Configure Gradle to use JFrog Artifactory
+        working-directory: app/spring-petclinic
         run: |
-          cd app/spring-petclinic
-          ./gradlew build
+          jf gradlec --repo-resolve=demo-dev-gradle-dev --repo-deploy=demo-dev-gradle-dev
+      
+      - name: Build with Gradle via JFrog
+        working-directory: app/spring-petclinic
+        run: |
+          jf gradle clean build
