@@ -39,6 +39,10 @@ dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-validation'
   implementation 'javax.cache:cache-api'
   implementation 'jakarta.xml.bind:jakarta.xml.bind-api'
+  // Vulnerable log4j version for Frogbot testing
+  implementation 'log4j:log4j:1.2.11'
+  // Vulnerable commons-text with CVE-2022-42889 (Text4Shell)
+  implementation 'org.apache.commons:commons-text:1.9'
   runtimeOnly 'org.springframework.boot:spring-boot-starter-actuator'
   runtimeOnly "org.webjars:webjars-locator-lite:${webjarsLocatorLiteVersion}"
   runtimeOnly "org.webjars.npm:bootstrap:${webjarsBootstrapVersion}"
