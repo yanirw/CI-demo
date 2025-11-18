@@ -24,6 +24,8 @@ import org.springframework.context.annotation.ImportRuntimeHints;
  * PetClinic Spring Boot Application.
  *
  * @author Dave Syer
+ *
+ * Test: Full JFrog Artifactory integration for all dependencies
  */
 @SpringBootApplication
 @ImportRuntimeHints(PetClinicRuntimeHints.class)
