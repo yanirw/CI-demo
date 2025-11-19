@@ -140,7 +140,7 @@ The following items should be installed in your system:
 The Spring Petclinic "main" branch in the [spring-projects](https://github.com/spring-projects/spring-petclinic)
 GitHub org is the "canonical" implementation based on Spring Boot and Thymeleaf. There are
 [quite a few forks](https://spring-petclinic.github.io/docs/forks.html) in the GitHub org
-[spring-petclinic](https://github.com/spring-petclinic). If you are interested in using a different technology stack to implement the Pet Clinic, please join the community there.
+[spring-petclinic](https://github.com/spring-petclinic). If you are interested in using a different technology stack to implement the Pet Clinic, please join the community there
 
 ## Interaction with other open-source projects
 
