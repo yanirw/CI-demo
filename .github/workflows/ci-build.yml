@@ -80,6 +80,10 @@ jobs:
         echo "Logging into JFrog Docker registry: $DOCKER_REGISTRY"
         jf docker login $DOCKER_REGISTRY
 
+    - name: Pull base image
+      run: |
+        jf docker pull winnik.jfrog.io/demo-docker/amazoncorretto:17-alpine
+
     - name: Build Docker image
       working-directory: app/spring-petclinic
       env:
