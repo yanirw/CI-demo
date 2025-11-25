@@ -24,18 +24,11 @@ jobs:
     name: Build & Test
     runs-on: ubuntu-latest
     outputs:
-      image-tag: ${{ steps.image-tag.outputs.tag }}
+      image-tag: ${{ github.run_number }}
       docker-registry: ${{ steps.docker-registry.outputs.registry }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Generate image tag
-      id: image-tag
-      run: |
-        TAG=${GITHUB_SHA::8}
-        echo "tag=$TAG" >> $GITHUB_OUTPUT
-        echo "Generated image tag: $TAG"
 
     - name: Parse Docker registry from JF_URL
       id: docker-registry
@@ -52,12 +45,33 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Set build environment
+      run: |
+        echo "JFROG_CLI_BUILD_NAME=${{ env.BUILD_NAME }}" >> $GITHUB_ENV
+        echo "JFROG_CLI_BUILD_NUMBER=${{ needs.build.outputs.image-tag }}" >> $GITHUB_ENV
+
     - name: Setup JFrog CLI
       uses: jfrog/setup-jfrog-cli@v4
       env:
         JF_URL: ${{ env.JF_URL }}
       with:
         oidc-provider-name: yanirw/CI-demo@github
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Configure Maven to use JFrog Artifactory
+      working-directory: app/spring-petclinic
+      run: |
+        jf mvnc --repo-resolve-releases=demo-dev-libs-release --repo-resolve-snapshots=demo-dev-libs-snapshot
+
+    - name: Build with Maven via JFrog
+      working-directory: app/spring-petclinic
+      run: |
+        jf mvn clean install -B
 
     - name: Docker login to JFrog
       env:
@@ -94,9 +108,6 @@ jobs:
         jf docker push $FULL_IMAGE:$IMAGE_TAG
 
     - name: Publish build info to JFrog
-      env:
-        JFROG_CLI_BUILD_NAME: ${{ env.BUILD_NAME }}
-        JFROG_CLI_BUILD_NUMBER: ${{ needs.build.outputs.image-tag }}
       run: |
         echo "Publishing build info to JFrog..."
         jf rt build-collect-env
@@ -104,9 +115,6 @@ jobs:
         jf rt build-publish
 
     - name: XRay security scan
-      env:
-        JFROG_CLI_BUILD_NAME: ${{ env.BUILD_NAME }}
-        JFROG_CLI_BUILD_NUMBER: ${{ needs.build.outputs.image-tag }}
       run: |
         echo "🛡️ Scanning build against XRay policies"
         # Build name and number are automatically read from environment variables
